@@ -926,7 +926,7 @@
   function applyAdminUI() {
     document.getElementById('admin-badge').style.display='flex';
     document.getElementById('tab-admin').style.display='flex';
-    requestAnimationFrame(adjustHeaderOffset);
+    requestAnimationFrame(() => { adjustHeaderOffset(); showTab('admin'); });
   }
 
   function lockAdmin() {
