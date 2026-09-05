@@ -573,6 +573,7 @@
     document.getElementById('view-'+t).classList.add('on');
     document.getElementById('tab-'+t).classList.add('on');
     if (t === 'admin') renderAdminList();
+    window.scrollTo({top:0, behavior:'instant'});
     requestAnimationFrame(adjustHeaderOffset);
   }
 
