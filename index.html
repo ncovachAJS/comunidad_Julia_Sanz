@@ -331,7 +331,7 @@
         <div class="tg-lbl">¿Se ha reportado Avalon?<small>Activa si ya has comunicado esta incidencia</small></div>
       </div>
       <div class="sub-fld" id="gestora-fields">
-        <div class="fld"><label>Fecha en que se comunicó</label><input type="date" id="f-gdate"></div>
+        <div class="fld"><label>Fecha en que se comunicó</label><div style="position:relative"><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none">📅</span><input type="date" id="f-gdate" style="padding-right:38px"></div></div>
         <div class="fld"><label>Respuesta de Avalon (si la hay)</label><textarea id="f-gresp" placeholder="¿Qué dijeron? ¿Cuándo prometieron resolverlo?" style="min-height:68px"></textarea></div>
       </div>
       <div class="toggle-row" id="tog-recur" onclick="toggleRecur()">
@@ -538,6 +538,9 @@
     gestoraOn = !gestoraOn;
     document.getElementById('tog-gestora').classList.toggle('on', gestoraOn);
     document.getElementById('gestora-fields').classList.toggle('on', gestoraOn);
+    if (gestoraOn && !document.getElementById('f-gdate').value) {
+      document.getElementById('f-gdate').value = new Date().toISOString().slice(0,10);
+    }
   }
   function toggleRecur() {
     recurOn = !recurOn;
