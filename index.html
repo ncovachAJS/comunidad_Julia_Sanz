@@ -367,7 +367,6 @@
       <button class="fbtn" onclick="setFilter(this,'urgente')">🔴 Urgentes</button>
     </div>
     <div class="toolbar-right">
-      <button class="btn-s" onclick="exportCSV()">⬇️ Exportar CSV</button>
     </div>
   </div>
   <div id="list-content"><div class="ldg"><span class="ldg-dot"></span><span class="ldg-dot"></span><span class="ldg-dot"></span></div></div>
@@ -809,20 +808,6 @@
     await Promise.all(targets.map(r=>db.collection('reports').doc(r.id).update({status:to}).catch(console.error)));
   }
 
-  // ── Export ───────────────────────────────────────────────────
-  function exportCSV() {
-    const rows = [['Fecha','Categoría','Zona','Urgencia','Título','Descripción','Estado','Reportado gestora','Fecha gestora','Respuesta gestora','Reincidente']];
-    allReports.forEach(r=>rows.push([
-      fmtDate(r.createdAt),CAT_LABELS[r.category]||r.category,r.zone||'',r.urgency,r.title,r.description||'',
-      STATUS_LABELS[r.status]||r.status,r.reportedToGestora?'Sí':'No',r.reportedDate||'',r.gestoraResponse||'',r.isRecurring?'Sí':'No'
-    ]));
-    const csv = rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n');
-    const blob = new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `incidencias_${new Date().toISOString().slice(0,10)}.csv`;
-    a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-  }
 
   // ── Admin ────────────────────────────────────────────────────
   function showPinModal() {
