@@ -333,7 +333,21 @@
       </div>
       <div class="sub-fld" id="gestora-fields">
         <div class="fld"><label>Fecha en que se comunicó</label><div style="position:relative"><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none">📅</span><input type="date" id="f-gdate" style="padding-right:38px"></div></div>
-        <div class="fld"><label>Respuesta de Avalon (si la hay)</label><textarea id="f-gresp" placeholder="¿Qué dijeron? ¿Cuándo prometieron resolverlo?" style="min-height:68px"></textarea></div>
+        <div class="fld">
+          <label>Respuesta de Avalon (si la hay)</label>
+          <textarea id="f-gresp" placeholder="¿Qué dijeron? ¿Cuándo prometieron resolverlo?" style="min-height:68px"></textarea>
+          <div style="margin-top:8px">
+            <input type="file" id="gestora-photo-inp" accept="image/*" style="display:none">
+            <button type="button" id="gestora-photo-btn" onclick="document.getElementById('gestora-photo-inp').click()" style="background:var(--surface-2);border:1.5px dashed var(--border);border-radius:var(--r);padding:7px 14px;font-size:13px;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:6px;width:100%">
+              <span>📎</span><span id="gestora-photo-lbl">Adjuntar captura del correo (opcional)</span>
+              <span id="gestora-photo-spin" style="display:none;margin-left:auto">⏳</span>
+            </button>
+            <div id="gestora-photo-preview" style="display:none;margin-top:8px;position:relative;display:none">
+              <img id="gestora-photo-img" src="" style="width:100%;max-height:180px;object-fit:contain;border-radius:var(--r);border:1.5px solid var(--border-l)">
+              <button type="button" onclick="removeGestoraPhoto()" style="position:absolute;top:6px;right:6px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;font-weight:700">✕</button>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="toggle-row" id="tog-recur" onclick="toggleRecur()">
         <div class="sw"></div>
@@ -454,6 +468,7 @@
   let isAdmin = false;
   let adminPin = 'vecinos2026'; // PIN por defecto — cámbialo desde el panel admin
   let cloudinaryReady = false;
+  let gestoraPhotoUrl = null;
 
   const CAT_LABELS = { jardineria:'🌿 Jardinería',limpieza:'🧹 Limpieza',piscina:'🏊 Piscina',mantenimiento:'🔧 Mantenimiento',iluminacion:'💡 Iluminación',zonas_comunes:'🏛️ Zonas comunes',conserjeria:'🚪 Conserjería',bloque:'🏢 Bloque',otros:'⚙️ Otros' };
   const STATUS_LABELS = { nuevo:'Nuevo',reportado:'Reportado a gestora',en_proceso:'En proceso',resuelto:'Resuelto',sin_resolver:'Sin resolver' };
@@ -534,6 +549,29 @@
       document.getElementById('err-urg').classList.remove('on');
     });
   });
+
+  document.getElementById('gestora-photo-inp').addEventListener('change', async function() {
+    const file = this.files[0]; if (!file) return;
+    document.getElementById('gestora-photo-spin').style.display = 'inline';
+    document.getElementById('gestora-photo-lbl').textContent = 'Subiendo...';
+    try {
+      gestoraPhotoUrl = await uploadToCloudinary(file);
+      document.getElementById('gestora-photo-img').src = gestoraPhotoUrl;
+      document.getElementById('gestora-photo-preview').style.display = 'block';
+      document.getElementById('gestora-photo-lbl').textContent = 'Captura adjunta ✓';
+    } catch(e) {
+      alert('No se pudo subir la imagen.');
+      document.getElementById('gestora-photo-lbl').textContent = 'Adjuntar captura del correo (opcional)';
+    }
+    document.getElementById('gestora-photo-spin').style.display = 'none';
+    this.value = '';
+  });
+
+  function removeGestoraPhoto() {
+    gestoraPhotoUrl = null;
+    document.getElementById('gestora-photo-preview').style.display = 'none';
+    document.getElementById('gestora-photo-lbl').textContent = 'Adjuntar captura del correo (opcional)';
+  }
 
   function toggleGestora() {
     gestoraOn = !gestoraOn;
@@ -653,6 +691,7 @@
       reportedToGestora: gestoraOn,
       reportedDate: gestoraOn ? (document.getElementById('f-gdate').value||null) : null,
       gestoraResponse: gestoraOn ? document.getElementById('f-gresp').value.trim() : '',
+      gestoraPhoto: gestoraOn ? (gestoraPhotoUrl || null) : null,
       isRecurring: recurOn, status: 'nuevo', updates: []
     };
 
@@ -674,6 +713,9 @@
     document.querySelectorAll('.pill.on').forEach(p=>p.classList.remove('on'));
     document.getElementById('tog-gestora').classList.remove('on');
     document.getElementById('gestora-fields').classList.remove('on');
+    gestoraPhotoUrl = null;
+    document.getElementById('gestora-photo-preview').style.display = 'none';
+    document.getElementById('gestora-photo-lbl').textContent = 'Adjuntar captura del correo (opcional)';
     document.getElementById('tog-recur').classList.remove('on');
     renderPhotoThumbs();
     document.getElementById('submit-btn').disabled=false;
@@ -737,7 +779,7 @@
       ? `<ul class="updates">${r.updates.map(u=>`<li><div class="upd-date">${fmtDate(u.date)}</div>${escHtml(u.text)}</li>`).join('')}</ul>`
       : '<p style="font-size:13px;color:var(--faint)">Sin actualizaciones.</p>';
     const gestInfo = r.reportedToGestora
-      ? `<div class="gest-info">${r.reportedDate?`<strong>Reportado el</strong> ${new Date(r.reportedDate).toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'})}<br>`:''}${r.gestoraResponse?`<strong>Respuesta:</strong> ${escHtml(r.gestoraResponse)}`:'<em>Sin respuesta registrada</em>'}</div>`
+      ? `<div class="gest-info">${r.reportedDate?`<strong>Reportado el</strong> ${new Date(r.reportedDate).toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'})}<br>`:''}${r.gestoraResponse?`<strong>Respuesta:</strong> ${escHtml(r.gestoraResponse)}`:'<em>Sin respuesta registrada</em>'}${r.gestoraPhoto?`<br><a href="${r.gestoraPhoto}" target="_blank"><img src="${r.gestoraPhoto}" style="margin-top:8px;max-width:100%;max-height:160px;object-fit:contain;border-radius:6px;border:1.5px solid var(--border-l);display:block"></a>`:''}}</div>`
       : '<p style="font-size:13px;color:var(--faint)">No comunicado a la gestora.</p>';
     const delBtn = admin ? `<button class="btn-danger" onclick="deleteReport('${r.id}')" style="padding:4px 10px;font-size:12px">🗑️ Eliminar</button>` : '';
     return `<div class="rcard">
