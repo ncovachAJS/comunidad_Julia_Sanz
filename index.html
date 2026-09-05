@@ -230,6 +230,36 @@
       .main{padding:16px 12px 80px;padding-top:calc(var(--hdr-h, 108px) + 16px)}
       .stats{grid-template-columns:repeat(2,1fr)}
     }
+
+    /* ── IMPRESIÓN ─────────────────────────────────── */
+    @media print{
+      *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      body{background:#fff!important;color:#111!important;font-size:12px;margin:0}
+      .hdr,.setup-banner,.tabs,.modal-overlay,.toast,#view-form,#view-list,#view-admin,.admin-link,footer{display:none!important}
+      #print-view{display:block!important}
+      .pv-header{border-bottom:2px solid #1a2535;padding-bottom:10px;margin-bottom:20px}
+      .pv-header h1{font-family:'DM Serif Display',serif;font-size:22px;color:#1a2535;margin:0 0 2px}
+      .pv-header p{font-size:11px;color:#666;margin:0}
+      .pv-card{border:1px solid #ddd;border-radius:6px;padding:12px 14px;margin-bottom:14px;page-break-inside:avoid;break-inside:avoid}
+      .pv-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;gap:8px}
+      .pv-cat{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#555}
+      .pv-status{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;border:1px solid #ccc;white-space:nowrap}
+      .pv-status.s-nuevo{background:#fff3e0;border-color:#f0a030;color:#8a5500}
+      .pv-status.s-reportado{background:#e8f0fe;border-color:#4a80d0;color:#1a3a80}
+      .pv-status.s-en_proceso{background:#e8f4fd;border-color:#2a90b0;color:#145a70}
+      .pv-status.s-resuelto{background:#e6f4ea;border-color:#2a8a4a;color:#0d5025}
+      .pv-title{font-size:14px;font-weight:600;color:#111;margin:0 0 4px}
+      .pv-meta{font-size:11px;color:#666;margin-bottom:6px}
+      .pv-desc{font-size:12px;color:#333;margin-bottom:8px;line-height:1.5}
+      .pv-photos{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+      .pv-photos img{width:110px;height:90px;object-fit:cover;border-radius:4px;border:1px solid #ddd}
+      .pv-gestora{background:#fffbe6;border-left:3px solid #d8a020;padding:8px 10px;border-radius:4px;font-size:11px;color:#444;margin-top:6px}
+      .pv-gestora strong{color:#111}
+      .pv-gestora img{max-width:100%;max-height:120px;object-fit:contain;border-radius:4px;margin-top:6px;display:block}
+      .pv-urg-urgente{border-left:4px solid #c03030}
+      .pv-urg-moderado{border-left:4px solid #c07800}
+    }
+    #print-view{display:none}
   </style>
 </head>
 <body>
@@ -267,6 +297,7 @@
 <!-- FORMULARIO -->
 <div class="view on" id="view-form">
   <div class="toast" id="toast">✅ Incidencia registrada. ¡Gracias!</div>
+<div id="print-view"></div>
 
   <form id="report-form" novalidate>
     <div style="margin-bottom:22px">
@@ -410,6 +441,17 @@
       <button class="btn-warn" onclick="bulkStatus('reportado','en_proceso')">⚙️ Reportadas → En proceso</button>
       <button class="btn-s" onclick="bulkStatus('en_proceso','resuelto')">✅ En proceso → Resueltas</button>
     </div>
+  </div>
+
+  <div class="admin-section">
+    <h3>Exportar informe PDF</h3>
+    <p>Genera un documento imprimible con todos los registros, fotos incluidas. Ideal para juntas de vecinos.</p>
+    <div class="admin-actions" style="margin-bottom:12px">
+      <button class="btn-s" onclick="printReports('todos')">🖨️ Todos los registros</button>
+      <button class="btn-warn" onclick="printReports('pendientes')">⚠️ Solo pendientes</button>
+      <button class="btn-s" onclick="printReports('gestora')">📞 Reportados a Avalon</button>
+    </div>
+    <p style="font-size:12px;color:var(--faint)">Se abrirá el diálogo de impresión del sistema. Elige «Guardar como PDF» para exportar el archivo.</p>
   </div>
 
   <div class="admin-section">
@@ -918,6 +960,57 @@
   }
 
   init();
+
+  // ── Impresión PDF ────────────────────────────────────────────
+  function printReports(modo) {
+    const ahora = new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    let registros = [...allReports].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+    let tituloFiltro = 'Todos los registros';
+    if (modo === 'pendientes') {
+      registros = registros.filter(r => r.status !== 'resuelto');
+      tituloFiltro = 'Registros pendientes';
+    } else if (modo === 'gestora') {
+      registros = registros.filter(r => r.reportedToGestora);
+      tituloFiltro = 'Reportados a Avalon';
+    }
+
+    const tarjetas = registros.map(r => {
+      const fecha = new Date(r.createdAt).toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'});
+      const hora  = new Date(r.createdAt).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+      const fotos = r.photos && r.photos.length
+        ? `<div class="pv-photos">${r.photos.map(p=>`<img src="${p}" alt="foto">`).join('')}</div>` : '';
+      let gestoraHtml = '';
+      if (r.reportedToGestora) {
+        const fechaGest = r.reportedDate ? new Date(r.reportedDate).toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'}) : null;
+        gestoraHtml = `<div class="pv-gestora">
+          <strong>📞 Reportado a Avalon</strong>${fechaGest ? ` el ${fechaGest}` : ''}<br>
+          ${r.gestoraResponse ? escHtml(r.gestoraResponse) : '<em>Sin respuesta registrada</em>'}
+          ${r.gestoraPhoto ? `<img src="${r.gestoraPhoto}" alt="captura correo">` : ''}
+        </div>`;
+      }
+      const urgClass = r.urgency === 'urgente' ? 'pv-urg-urgente' : r.urgency === 'moderado' ? 'pv-urg-moderado' : '';
+      return `<div class="pv-card ${urgClass}">
+        <div class="pv-card-header">
+          <span class="pv-cat">${CAT_LABELS[r.category]||r.category}</span>
+          <span class="pv-status s-${r.status}">${STATUS_LABELS[r.status]||r.status}</span>
+        </div>
+        <div class="pv-title">${escHtml(r.title)}</div>
+        <div class="pv-meta">📅 ${fecha} · ${hora}${r.zone ? ` · 📍 ${escHtml(r.zone)}` : ''}${r.isRecurring ? ' · 🔁 Reincidente' : ''}</div>
+        ${r.description ? `<div class="pv-desc">${escHtml(r.description)}</div>` : ''}
+        ${fotos}
+        ${gestoraHtml}
+      </div>`;
+    }).join('');
+
+    document.getElementById('print-view').innerHTML = `
+      <div class="pv-header">
+        <h1>Comunidad Julia Sanz 3 — ${tituloFiltro}</h1>
+        <p>Generado el ${ahora} · ${registros.length} registro${registros.length!==1?'s':''}</p>
+      </div>
+      ${tarjetas || '<p style="color:#888">No hay registros con este filtro.</p>'}`;
+
+    window.print();
+  }
 </script>
 </body>
 </html>
