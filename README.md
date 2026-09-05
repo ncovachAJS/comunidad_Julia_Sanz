@@ -1,64 +1,25 @@
 # Registro Vecinal — Comunidad Julia Sanz
 
-Aplicación web anónima para registrar incidencias de la comunidad (jardinería, limpieza, piscina, mantenimiento...). Completamente gratuita, sin servidor propio — usa Firebase como base de datos y GitHub Pages como hosting.
+Aplicación web anónima para registrar incidencias de la comunidad (jardinería, limpieza, piscina, mantenimiento...). Gratuita, sin servidor propio.
 
-**URL pública:** `https://TU_USUARIO.github.io/comunidad_Julia_Sanz/`
-
----
-
-## Paso 1 — Crear la base de datos en Firebase
-
-1. Ve a [console.firebase.google.com](https://console.firebase.google.com)
-2. Pulsa **"Agregar proyecto"** → dale un nombre (ej: `comunidad-julia-sanz`) → Continuar
-3. Desactiva Google Analytics si quieres → **Crear proyecto**
-
-### Activar Firestore (la base de datos)
-
-4. En el menú izquierdo: **Compilación → Firestore Database**
-5. Pulsa **"Crear base de datos"**
-6. Elige **"Comenzar en modo de prueba"** → siguiente
-7. Selecciona la ubicación `europe-west` → **Listo**
-
-### Obtener las credenciales
-
-8. En el menú izquierdo: **⚙️ Configuración del proyecto**
-9. Baja hasta **"Tus aplicaciones"** → pulsa el icono **`</>`** (Web)
-10. Dale un nombre (ej: `web`) → **Registrar aplicación**
-11. Verás un bloque de código con `firebaseConfig`. Cópialo.
+| Servicio | Para qué | Plan gratuito |
+|---|---|---|
+| **Firebase Firestore** | Base de datos | 1 GB, 50K lecturas/día |
+| **Cloudinary** | Almacenamiento de fotos | 25 GB/mes |
+| **Render** | Hosting web | Sitios estáticos ilimitados |
 
 ---
 
-## Paso 2 — Configurar el archivo index.html
+## Paso 1 — Firebase (base de datos)
 
-Abre `index.html` y busca esta sección al principio:
+1. Ve a [console.firebase.google.com](https://console.firebase.google.com) → **Agregar proyecto**
+2. **Compilación → Firestore Database → Crear base de datos**  
+   → Modo de prueba → Ubicación `europe-west` → Listo
+3. **⚙️ Configuración del proyecto → `</>` Web** → registra la app → copia el objeto `firebaseConfig`
 
-```javascript
-const FIREBASE_CONFIG = {
-  apiKey:            "TU_API_KEY",
-  authDomain:        "TU_PROYECTO.firebaseapp.com",
-  projectId:         "TU_PROYECTO",
-  ...
-};
-```
+### Reglas de seguridad de Firestore
 
-Reemplaza los valores con los que copiaste de Firebase. Ejemplo real:
-
-```javascript
-const FIREBASE_CONFIG = {
-  apiKey:            "AIzaSyAbc123...",
-  authDomain:        "comunidad-julia-sanz.firebaseapp.com",
-  projectId:         "comunidad-julia-sanz",
-  storageBucket:     "comunidad-julia-sanz.appspot.com",
-  messagingSenderId: "123456789",
-  appId:             "1:123456789:web:abc123..."
-};
-```
-
----
-
-## Paso 3 — Configurar las reglas de seguridad de Firestore
-
-En Firebase Console → **Firestore Database → Reglas**, pega esto y pulsa **Publicar**:
+**Firestore → Reglas** → pega esto → **Publicar**:
 
 ```
 rules_version = '2';
@@ -71,85 +32,94 @@ service cloud.firestore {
 }
 ```
 
-> Esto permite que cualquier vecino con el enlace pueda leer y escribir, que es lo que queremos para una app anónima de comunidad. El panel admin está protegido por PIN.
+---
+
+## Paso 2 — Cloudinary (fotos)
+
+1. Entra en [cloudinary.com/console](https://cloudinary.com/console)
+2. Anota tu **Cloud name** (arriba a la izquierda en el dashboard)
+3. Ve a **Settings → Upload → Upload presets → Add upload preset**
+   - Signing mode: **Unsigned**
+   - Folder: `comunidad_julia_sanz` (opcional)
+   - Guarda → anota el nombre del preset
 
 ---
 
-## Paso 4 — Subir a GitHub
+## Paso 3 — Configurar index.html
 
-### Si es la primera vez
+Abre `index.html` y rellena las dos secciones al principio:
 
-```bash
-git init
-git add .
-git commit -m "Primera versión"
-git branch -M main
-git remote add origin https://github.com/TU_USUARIO/comunidad_Julia_Sanz.git
-git push -u origin main
+```javascript
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyAbc123...",
+  authDomain:        "mi-proyecto.firebaseapp.com",
+  projectId:         "mi-proyecto",
+  storageBucket:     "mi-proyecto.appspot.com",
+  messagingSenderId: "123456789",
+  appId:             "1:123:web:abc..."
+};
+
+const CLOUDINARY_CONFIG = {
+  cloudName:    "mi-cloud-name",
+  uploadPreset: "mi-preset-sin-firmar"
+};
 ```
 
-### Para actualizar después
+---
+
+## Paso 4 — Subir cambios a GitHub
 
 ```bash
 git add .
-git commit -m "Descripción del cambio"
+git commit -m "Configurar Firebase y Cloudinary"
 git push
 ```
 
 ---
 
-## Paso 5 — Activar GitHub Pages (hosting gratuito)
+## Paso 5 — Hosting en Render
 
-1. En tu repositorio de GitHub → **Settings**
-2. Menú lateral izquierdo → **Pages**
-3. En "Source" selecciona **"Deploy from a branch"**
-4. Branch: **main** / Folder: **/ (root)**
-5. Pulsa **Save**
+1. Ve a [render.com](https://render.com) → **New → Static Site**
+2. Conecta tu cuenta de GitHub y selecciona el repositorio `comunidad_Julia_Sanz`
+3. Configura:
+   - **Name:** `comunidad-julia-sanz` (o el que quieras)
+   - **Branch:** `main`
+   - **Build Command:** *(dejar vacío)*
+   - **Publish Directory:** `.`
+4. Pulsa **Create Static Site**
 
-En 1-2 minutos tu web estará disponible en:
+En 1-2 minutos tendrás la web en:
 ```
-https://TU_USUARIO.github.io/comunidad_Julia_Sanz/
+https://comunidad-julia-sanz.onrender.com
 ```
+Esa URL es la que compartes con los vecinos. Sin dominio, sin coste.
 
-Esa URL es la que compartes con los vecinos. ¡No hace falta dominio!
+> Cada vez que hagas `git push`, Render re-despliega automáticamente.
 
 ---
 
 ## Uso
 
 ### Vecinos normales
-- Abrir el enlace → rellenar el formulario → enviar
-- Ver el panel "📋 Registros" para ver todas las incidencias
+Abrir el enlace → rellenar el formulario → enviar. Las fotos se suben automáticamente a Cloudinary al seleccionarlas.
 
 ### Administradores
-- Abrir el enlace → ir al pie de página → **"Acceso administradores"**
-- PIN inicial: **`vecinos2024`** — ¡cámbialo desde el panel admin!
-- Acceso al panel **🔑 Gestión** con: borrado, acciones masivas, cambio de PIN
+Abrir el enlace → pie de página → **"Acceso administradores"**  
+PIN inicial: **`vecinos2024`** — cámbialo desde el panel **🔑 Gestión** nada más entrar.
 
 ---
 
 ## Características
 
-- ✅ 100% anónimo (sin login, sin datos personales)
-- ✅ Fotos adjuntas (hasta 5 por incidencia)
+- ✅ 100% anónimo — sin login ni datos personales
+- ✅ Fotos almacenadas en Cloudinary (URLs, no base64)
 - ✅ Categorías: jardinería, limpieza, piscina, mantenimiento, iluminación, zonas comunes, portería
-- ✅ Niveles de urgencia: leve / moderado / urgente
-- ✅ Seguimiento del estado: Nuevo → Reportado → En proceso → Resuelto
-- ✅ Registro de comunicaciones con la empresa gestora
-- ✅ Actualizaciones de seguimiento en cada incidencia
-- ✅ Marcador de incidencias reincidentes
-- ✅ Panel admin con PIN protegido
-- ✅ Exportación a CSV (para juntas de vecinos)
-- ✅ Tiempo real: todos los vecinos ven los cambios al instante
-- ✅ Funciona en móvil
-
----
-
-## Coste
-
-| Servicio | Plan gratuito incluye |
-|---|---|
-| Firebase Firestore | 1 GB almacenamiento, 50.000 lecturas/día, 20.000 escrituras/día |
-| GitHub Pages | Hosting ilimitado para proyectos públicos |
-
-Para una comunidad de vecinos normal, **nunca superarás los límites gratuitos**.
+- ✅ Urgencia: leve / moderado / urgente
+- ✅ Estado: Nuevo → Reportado → En proceso → Resuelto
+- ✅ Registro de comunicaciones con la gestora
+- ✅ Actualizaciones de seguimiento por incidencia
+- ✅ Marcador de reincidencia
+- ✅ Panel admin protegido por PIN (borrado, acciones masivas, cambio de PIN)
+- ✅ Exportación CSV para juntas de vecinos
+- ✅ Tiempo real — todos los vecinos ven los cambios al instante
+- ✅ Responsive — funciona en móvil
