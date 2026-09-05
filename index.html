@@ -573,6 +573,7 @@
     document.getElementById('view-'+t).classList.add('on');
     document.getElementById('tab-'+t).classList.add('on');
     if (t === 'admin') renderAdminList();
+    requestAnimationFrame(adjustHeaderOffset);
   }
 
   // ── Formulario ───────────────────────────────────────────────
@@ -925,12 +926,14 @@
   function applyAdminUI() {
     document.getElementById('admin-badge').style.display='flex';
     document.getElementById('tab-admin').style.display='flex';
+    requestAnimationFrame(adjustHeaderOffset);
   }
 
   function lockAdmin() {
     isAdmin=false; sessionStorage.removeItem('rv_admin');
     document.getElementById('admin-badge').style.display='none';
     document.getElementById('tab-admin').style.display='none';
+    requestAnimationFrame(adjustHeaderOffset);
     showTab('list');
   }
 
