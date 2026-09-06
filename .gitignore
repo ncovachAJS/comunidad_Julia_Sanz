@@ -4,6 +4,8 @@ node_modules/
 # Variables de entorno — NUNCA subir al repositorio
 .env
 .env.local
+.env.development
+.env.production
 .env.*.local
 
 # Build de Vite
