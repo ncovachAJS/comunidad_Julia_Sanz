@@ -161,7 +161,8 @@
     .s-nuevo{background:#ddeaf5;color:#1a4590}.s-reportado{background:#fef0d8;color:#8a5200}
     .s-en_proceso{background:#e0f0fe;color:#0055aa}.s-resuelto{background:#d2ecdf;color:#1a6035}.s-sin_resolver{background:#fce0e0;color:#9a2020}
     .rtitle{font-size:15px;font-weight:600;color:var(--text);margin-bottom:5px;line-height:1.3}
-    .rdesc{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:9px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .rdesc-preview{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:9px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .rdesc{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:10px}
     .rfoot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between}
     .rdate{font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums}
     .rtags{display:flex;gap:5px;flex-wrap:wrap}
@@ -816,7 +817,7 @@
       ? `<div class="prow">${r.photos.map(p=>`<img class="pthumb" src="${p}" onclick="openPhotoModal('${p}')" alt="foto">`).join('')}</div>` : '';
     const tags = [
       r.reportedToGestora ? `<span class="tag t-rep">📞 Reportado</span>` : '',
-      r.isRecurring ? `<span class="tag t-rec">🔁 Reincidente</span>` : '',
+      r.isRecurring ? `<span class="tag t-rec">🔁 Recurrente</span>` : '',
       r.photos&&r.photos.length ? `<span class="tag t-photo">📷 ${r.photos.length}</span>` : ''
     ].filter(Boolean).join('');
     const updList = r.updates&&r.updates.length
@@ -834,16 +835,17 @@
       <span class="spill s-${r.status}">${STATUS_LABELS[r.status]||r.status}</span>
     </div>
     <div class="rtitle">${escHtml(r.title)}</div>
-    ${r.description?`<div class="rdesc">${escHtml(r.description)}</div>`:''}
+    ${r.description?`<div class="rdesc-preview">${escHtml(r.description)}</div>`:''}
     ${pRow}
     <div class="rfoot"><span class="rdate">🕐 ${fmtDate(r.createdAt)}</span><div class="rtags">${tags}</div></div>
     <div class="card-actions">
-      <button class="exp-btn" onclick="toggleDetail('${r.id}')">Ver detalles ▾</button>
+      <button class="exp-btn" onclick="toggleDetail('${r.id}')" id="expbtn-${r.id}">Ver más ▾</button>
       ${delBtn}
     </div>
   </div>
   <div class="rdetail" id="det-${r.id}">
-    <div class="dlbl" style="margin-top:14px">Gestora</div>${gestInfo}
+    ${r.description?`<div class="rdesc" style="margin-top:14px">${escHtml(r.description)}</div>`:''}
+    <div class="dlbl">Gestora</div>${gestInfo}
     <div class="dlbl">Actualizaciones</div>${updList}
     <div class="upd-form">
       <input type="text" id="upd-inp-${r.id}" placeholder="Añadir seguimiento..." maxlength="300">
@@ -866,8 +868,8 @@
   function toggleDetail(id) {
     const el = document.getElementById('det-'+id);
     el.classList.toggle('on');
-    document.querySelectorAll(`[onclick="toggleDetail('${id}')"]`).forEach(b=>
-      b.textContent = el.classList.contains('on') ? 'Ocultar ▴' : 'Ver detalles ▾');
+    const btn = document.getElementById('expbtn-'+id);
+    if (btn) btn.textContent = el.classList.contains('on') ? 'Ver menos ▴' : 'Ver más ▾';
   }
 
   async function addUpdate(id) {
@@ -999,7 +1001,7 @@
           <span class="pv-status s-${r.status}">${STATUS_LABELS[r.status]||r.status}</span>
         </div>
         <div class="pv-title">${escHtml(r.title)}</div>
-        <div class="pv-meta">📅 ${fecha} · ${hora}${r.zone ? ` · 📍 ${escHtml(r.zone)}` : ''}${r.isRecurring ? ' · 🔁 Reincidente' : ''}</div>
+        <div class="pv-meta">📅 ${fecha} · ${hora}${r.zone ? ` · 📍 ${escHtml(r.zone)}` : ''}${r.isRecurring ? ' · 🔁 Recurrente' : ''}</div>
         ${r.description ? `<div class="pv-desc">${escHtml(r.description)}</div>` : ''}
         ${fotos}
         ${gestoraHtml}
