@@ -149,8 +149,7 @@
     .toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap}
     .toolbar-right{display:flex;gap:8px}
 
-    .rcard{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:20px;overflow:hidden;transition:box-shadow .15s;box-shadow:0 2px 10px rgba(0,0,0,.10)}
-    @media(prefers-color-scheme:dark){.rcard{border-color:var(--border);box-shadow:0 2px 12px rgba(0,0,0,.35)}}
+    .rcard{background:var(--surface);border:1px solid var(--border-l);border-radius:var(--r);margin-bottom:10px;overflow:hidden;transition:box-shadow .15s}
     .rcard:hover{box-shadow:0 4px 18px rgba(0,0,0,.07)}
     .ubar{height:4px;width:100%}
     .ubar.leve{background:var(--success)}.ubar.moderado{background:var(--warning)}.ubar.urgente{background:var(--danger)}
@@ -162,9 +161,7 @@
     .s-nuevo{background:#ddeaf5;color:#1a4590}.s-reportado{background:#fef0d8;color:#8a5200}
     .s-en_proceso{background:#e0f0fe;color:#0055aa}.s-resuelto{background:#d2ecdf;color:#1a6035}.s-sin_resolver{background:#fce0e0;color:#9a2020}
     .rtitle{font-size:15px;font-weight:600;color:var(--text);margin-bottom:5px;line-height:1.3}
-    .rdesc-preview{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-    .rdesc-preview.rdesc-expanded{display:block;overflow:visible}
-    .rdesc{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:10px}
+    .rdesc{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:9px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
     .rfoot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between}
     .rdate{font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums}
     .rtags{display:flex;gap:5px;flex-wrap:wrap}
@@ -819,7 +816,7 @@
       ? `<div class="prow">${r.photos.map(p=>`<img class="pthumb" src="${p}" onclick="openPhotoModal('${p}')" alt="foto">`).join('')}</div>` : '';
     const tags = [
       r.reportedToGestora ? `<span class="tag t-rep">📞 Reportado</span>` : '',
-      r.isRecurring ? `<span class="tag t-rec">🔁 Recurrente</span>` : '',
+      r.isRecurring ? `<span class="tag t-rec">🔁 Reincidente</span>` : '',
       r.photos&&r.photos.length ? `<span class="tag t-photo">📷 ${r.photos.length}</span>` : ''
     ].filter(Boolean).join('');
     const updList = r.updates&&r.updates.length
@@ -837,11 +834,11 @@
       <span class="spill s-${r.status}">${STATUS_LABELS[r.status]||r.status}</span>
     </div>
     <div class="rtitle">${escHtml(r.title)}</div>
-    ${r.description?`<div><div class="rdesc-preview" id="dp-${r.id}">${escHtml(r.description)}</div>${r.description.length>120?`<button class="exp-btn" id="dpbtn-${r.id}" onclick="toggleDesc('${r.id}')" style="margin-bottom:8px">Leer más ▾</button>`:''}`:'' }
+    ${r.description?`<div class="rdesc">${escHtml(r.description)}</div>`:''}
     ${pRow}
     <div class="rfoot"><span class="rdate">🕐 ${fmtDate(r.createdAt)}</span><div class="rtags">${tags}</div></div>
     <div class="card-actions">
-      <button class="exp-btn" onclick="toggleDetail('${r.id}')" id="expbtn-${r.id}">Ver más ▾</button>
+      <button class="exp-btn" onclick="toggleDetail('${r.id}')">Ver detalles ▾</button>
       ${delBtn}
     </div>
   </div>
@@ -869,15 +866,8 @@
   function toggleDetail(id) {
     const el = document.getElementById('det-'+id);
     el.classList.toggle('on');
-    const btn = document.getElementById('expbtn-'+id);
-    if (btn) btn.textContent = el.classList.contains('on') ? 'Ver menos ▴' : 'Ver más ▾';
-  }
-
-  function toggleDesc(id) {
-    const el = document.getElementById('dp-'+id);
-    const btn = document.getElementById('dpbtn-'+id);
-    const expanded = el.classList.toggle('rdesc-expanded');
-    btn.textContent = expanded ? 'Leer menos ▴' : 'Leer más ▾';
+    document.querySelectorAll(`[onclick="toggleDetail('${id}')"]`).forEach(b=>
+      b.textContent = el.classList.contains('on') ? 'Ocultar ▴' : 'Ver detalles ▾');
   }
 
   async function addUpdate(id) {
@@ -1009,7 +999,7 @@
           <span class="pv-status s-${r.status}">${STATUS_LABELS[r.status]||r.status}</span>
         </div>
         <div class="pv-title">${escHtml(r.title)}</div>
-        <div class="pv-meta">📅 ${fecha} · ${hora}${r.zone ? ` · 📍 ${escHtml(r.zone)}` : ''}${r.isRecurring ? ' · 🔁 Recurrente' : ''}</div>
+        <div class="pv-meta">📅 ${fecha} · ${hora}${r.zone ? ` · 📍 ${escHtml(r.zone)}` : ''}${r.isRecurring ? ' · 🔁 Reincidente' : ''}</div>
         ${r.description ? `<div class="pv-desc">${escHtml(r.description)}</div>` : ''}
         ${fotos}
         ${gestoraHtml}
