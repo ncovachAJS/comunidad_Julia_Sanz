@@ -161,7 +161,8 @@
     .s-nuevo{background:#ddeaf5;color:#1a4590}.s-reportado{background:#fef0d8;color:#8a5200}
     .s-en_proceso{background:#e0f0fe;color:#0055aa}.s-resuelto{background:#d2ecdf;color:#1a6035}.s-sin_resolver{background:#fce0e0;color:#9a2020}
     .rtitle{font-size:15px;font-weight:600;color:var(--text);margin-bottom:5px;line-height:1.3}
-    .rdesc-preview{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:9px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .rdesc-preview{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .rdesc-preview.rdesc-expanded{display:block;overflow:visible}
     .rdesc{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:10px}
     .rfoot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between}
     .rdate{font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums}
@@ -835,7 +836,7 @@
       <span class="spill s-${r.status}">${STATUS_LABELS[r.status]||r.status}</span>
     </div>
     <div class="rtitle">${escHtml(r.title)}</div>
-    ${r.description?`<div class="rdesc-preview">${escHtml(r.description)}</div>`:''}
+    ${r.description?`<div><div class="rdesc-preview" id="dp-${r.id}">${escHtml(r.description)}</div>${r.description.length>120?`<button class="exp-btn" id="dpbtn-${r.id}" onclick="toggleDesc('${r.id}')" style="margin-bottom:8px">Leer más ▾</button>`:''}`:'' }
     ${pRow}
     <div class="rfoot"><span class="rdate">🕐 ${fmtDate(r.createdAt)}</span><div class="rtags">${tags}</div></div>
     <div class="card-actions">
@@ -844,8 +845,7 @@
     </div>
   </div>
   <div class="rdetail" id="det-${r.id}">
-    ${r.description?`<div class="rdesc" style="margin-top:14px">${escHtml(r.description)}</div>`:''}
-    <div class="dlbl">Gestora</div>${gestInfo}
+    <div class="dlbl" style="margin-top:14px">Gestora</div>${gestInfo}
     <div class="dlbl">Actualizaciones</div>${updList}
     <div class="upd-form">
       <input type="text" id="upd-inp-${r.id}" placeholder="Añadir seguimiento..." maxlength="300">
@@ -870,6 +870,13 @@
     el.classList.toggle('on');
     const btn = document.getElementById('expbtn-'+id);
     if (btn) btn.textContent = el.classList.contains('on') ? 'Ver menos ▴' : 'Ver más ▾';
+  }
+
+  function toggleDesc(id) {
+    const el = document.getElementById('dp-'+id);
+    const btn = document.getElementById('dpbtn-'+id);
+    const expanded = el.classList.toggle('rdesc-expanded');
+    btn.textContent = expanded ? 'Leer menos ▴' : 'Leer más ▾';
   }
 
   async function addUpdate(id) {
