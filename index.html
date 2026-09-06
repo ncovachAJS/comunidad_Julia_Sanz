@@ -5,34 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Registro Vecinal — Comunidad Julia Sanz 3</title>
 
-  <!-- ============================================================
-       CONFIGURACIÓN FIREBASE
-       Ve a: console.firebase.google.com → tu proyecto → Configuración → Aplicaciones web
-       ============================================================ -->
-  <script>
-    const FIREBASE_CONFIG = {
-      apiKey: "AIzaSyCmNfLGjhd4WnJgmN2NC14TER3nltBHTRI",
-      authDomain: "comunidad-julia-sanz.firebaseapp.com",
-      projectId: "comunidad-julia-sanz",
-      storageBucket: "comunidad-julia-sanz.firebasestorage.app",
-      messagingSenderId: "421090810145",
-      appId: "1:421090810145:web:1f3ae14b674e29c1c7c660"
-    };
-
-    // ============================================================
-    // CONFIGURACIÓN CLOUDINARY (para subir fotos)
-    // Ve a: cloudinary.com → Settings → Upload → Upload presets → Add preset (Unsigned)
-    // ============================================================
-    const CLOUDINARY_CONFIG = {
-      cloudName:    "smu2pvrk",     // Settings → Account → Cloud name
-      uploadPreset: "comunidad_julia_sanz"   // nombre del preset sin firmar que hayas creado
-    };
-  </script>
-
-  <!-- Firebase SDK (compat v10) -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -40,12 +12,10 @@
 
 <!-- Avisos de configuración -->
 <div class="setup-banner" id="setup-banner">
-  ⚠️ Firebase no está configurado. Edita <strong>index.html</strong> y rellena <code>FIREBASE_CONFIG</code>.
-  <a href="https://console.firebase.google.com" target="_blank">Firebase Console →</a>
+  ⚠️ Firebase no está configurado. Revisa las variables de entorno en Render.
 </div>
 <div class="setup-banner" id="setup-banner-cloudinary" style="background:#0e6b9e">
-  ⚠️ Cloudinary no está configurado. Rellena <code>CLOUDINARY_CONFIG</code> en <strong>index.html</strong> para activar las fotos.
-  <a href="https://cloudinary.com/console" target="_blank">Cloudinary Console →</a>
+  ⚠️ Cloudinary no está configurado. Revisa las variables de entorno en Render.
 </div>
 
 <header class="hdr">
@@ -71,7 +41,7 @@
 <!-- FORMULARIO -->
 <div class="view on" id="view-form">
   <div class="toast" id="toast">✅ Incidencia registrada. ¡Gracias!</div>
-<div id="print-view"></div>
+  <div id="print-view"></div>
 
   <form id="report-form" novalidate>
     <div style="margin-bottom:22px">
@@ -147,7 +117,7 @@
               <span>📎</span><span id="gestora-photo-lbl">Adjuntar captura del correo (opcional)</span>
               <span id="gestora-photo-spin" style="display:none;margin-left:auto">⏳</span>
             </button>
-            <div id="gestora-photo-preview" style="display:none;margin-top:8px;position:relative;display:none">
+            <div id="gestora-photo-preview" style="display:none;margin-top:8px;position:relative">
               <img id="gestora-photo-img" src="" style="width:100%;max-height:180px;object-fit:contain;border-radius:var(--r);border:1.5px solid var(--border-l)">
               <button type="button" onclick="removeGestoraPhoto()" style="position:absolute;top:6px;right:6px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;font-weight:700">✕</button>
             </div>
@@ -186,8 +156,7 @@
       <button class="fbtn" onclick="setFilter(this,'resuelto')">Resueltos</button>
       <button class="fbtn" onclick="setFilter(this,'urgente')">🔴 Urgentes</button>
     </div>
-    <div class="toolbar-right">
-    </div>
+    <div class="toolbar-right"></div>
   </div>
   <div id="list-content"><div class="ldg"><span class="ldg-dot"></span><span class="ldg-dot"></span><span class="ldg-dot"></span></div></div>
 </div>
@@ -274,6 +243,6 @@
   <img class="photo-modal-img" id="modal-img" src="" alt="Foto incidencia">
 </div>
 
-<script src="app.js"></script>
+<script type="module" src="app.js"></script>
 </body>
 </html>

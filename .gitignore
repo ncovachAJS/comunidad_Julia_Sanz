@@ -1,0 +1,15 @@
+# Dependencias
+node_modules/
+
+# Variables de entorno — NUNCA subir al repositorio
+.env
+.env.local
+.env.*.local
+
+# Build de Vite
+dist/
+
+# Editores
+.DS_Store
+Thumbs.db
+*.swp

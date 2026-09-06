@@ -1,3 +1,21 @@
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/firestore';
+
+// ── Configuración (inyectada por Vite desde variables de entorno) ────────────
+const FIREBASE_CONFIG = {
+  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId:             import.meta.env.VITE_FIREBASE_APP_ID,
+};
+
+const CLOUDINARY_CONFIG = {
+  cloudName:    import.meta.env.VITE_CLOUDINARY_CLOUD_NAME,
+  uploadPreset: import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET,
+};
+
 // ── Estado ──────────────────────────────────────────────────
 let db = null;
 let allReports = [], currentFilter = 'all';
@@ -28,15 +46,15 @@ function init() {
   if (isAdmin) applyAdminUI();
 
   // Cloudinary
-  if (CLOUDINARY_CONFIG.cloudName === 'TU_CLOUD_NAME') {
+  if (!CLOUDINARY_CONFIG.cloudName || CLOUDINARY_CONFIG.cloudName === 'TU_CLOUD_NAME') {
     document.getElementById('setup-banner-cloudinary').classList.add('show');
   } else {
     cloudinaryReady = true;
   }
 
-  if (FIREBASE_CONFIG.apiKey === 'TU_API_KEY') {
+  if (!FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey === 'TU_API_KEY') {
     document.getElementById('setup-banner').classList.add('show');
-    document.getElementById('list-content').innerHTML = '<div class="ldg" style="color:var(--danger)">⚠️ Configura Firebase en index.html para activar la base de datos.</div>';
+    document.getElementById('list-content').innerHTML = '<div class="ldg" style="color:var(--danger)">⚠️ Configura las variables de entorno de Firebase en Render.</div>';
     return;
   }
 
@@ -73,6 +91,7 @@ function showTab(t) {
   window.scrollTo({top:0, behavior:'instant'});
   requestAnimationFrame(adjustHeaderOffset);
 }
+window.showTab = showTab;
 
 // ── Formulario ───────────────────────────────────────────────
 document.querySelectorAll('#cat-pills .pill').forEach(btn => {
@@ -113,6 +132,7 @@ function removeGestoraPhoto() {
   document.getElementById('gestora-photo-preview').style.display = 'none';
   document.getElementById('gestora-photo-lbl').textContent = 'Adjuntar captura del correo (opcional)';
 }
+window.removeGestoraPhoto = removeGestoraPhoto;
 
 function toggleGestora() {
   gestoraOn = !gestoraOn;
@@ -122,15 +142,17 @@ function toggleGestora() {
     document.getElementById('f-gdate').value = new Date().toISOString().slice(0,10);
   }
 }
+window.toggleGestora = toggleGestora;
+
 function toggleRecur() {
   recurOn = !recurOn;
   document.getElementById('tog-recur').classList.toggle('on', recurOn);
 }
+window.toggleRecur = toggleRecur;
 
 // Fotos — subida a Cloudinary
 async function uploadToCloudinary(file) {
   if (!cloudinaryReady) {
-    // Fallback a base64 si Cloudinary no está configurado
     return await compressToBase64(file);
   }
   const fd = new FormData();
@@ -142,7 +164,6 @@ async function uploadToCloudinary(file) {
   });
   if (!res.ok) throw new Error('Error subiendo foto a Cloudinary');
   const data = await res.json();
-  // URL con transformación: máx 900px de ancho, calidad automática
   return data.secure_url.replace('/upload/', '/upload/w_900,q_auto,f_auto/');
 }
 
@@ -206,7 +227,9 @@ function renderPhotoThumbs() {
   pz.querySelector('.pz-hint').textContent = formPhotos.some(p=>p.uploading)
     ? `Subiendo... (${done}/${formPhotos.length} listas)` : 'Hasta 5 fotos · JPG, PNG';
 }
+
 function removePhoto(i) { formPhotos.splice(i,1); renderPhotoThumbs(); }
+window.removePhoto = removePhoto;
 
 // Envío
 document.getElementById('report-form').addEventListener('submit', async e => {
@@ -268,6 +291,8 @@ function setFilter(el,f) {
   document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('on'));
   el.classList.add('on'); currentFilter=f; renderList();
 }
+window.setFilter = setFilter;
+
 function getFiltered() {
   if (currentFilter==='all') return allReports;
   if (currentFilter==='urgente') return allReports.filter(r=>r.urgency==='urgente');
@@ -366,6 +391,7 @@ function toggleDetail(id) {
   document.querySelectorAll(`[onclick="toggleDetail('${id}')"]`).forEach(b=>
     b.textContent = el.classList.contains('on') ? 'Ocultar ▴' : 'Ver detalles ▾');
 }
+window.toggleDetail = toggleDetail;
 
 async function addUpdate(id) {
   const inp = document.getElementById('upd-inp-'+id);
@@ -375,17 +401,20 @@ async function addUpdate(id) {
   inp.value = '';
   await db.collection('reports').doc(id).update({ updates: [...(r.updates||[]),{date:new Date().toISOString(),text:txt}] }).catch(console.error);
 }
+window.addUpdate = addUpdate;
 
 async function changeStatus(id, status) {
   if (!db) return;
   await db.collection('reports').doc(id).update({status}).catch(console.error);
 }
+window.changeStatus = changeStatus;
 
 async function deleteReport(id) {
   if (!isAdmin||!db) return;
   if (!confirm('¿Eliminar esta incidencia? Esta acción no se puede deshacer.')) return;
   await db.collection('reports').doc(id).delete().catch(console.error);
 }
+window.deleteReport = deleteReport;
 
 async function bulkStatus(from, to) {
   if (!isAdmin||!db) return;
@@ -394,6 +423,7 @@ async function bulkStatus(from, to) {
   if (!confirm(`¿Cambiar ${targets.length} incidencia(s) de "${STATUS_LABELS[from]}" a "${STATUS_LABELS[to]}"?`)) return;
   await Promise.all(targets.map(r=>db.collection('reports').doc(r.id).update({status:to}).catch(console.error)));
 }
+window.bulkStatus = bulkStatus;
 
 // ── Admin ────────────────────────────────────────────────────
 function showPinModal() {
@@ -402,7 +432,10 @@ function showPinModal() {
   document.getElementById('pin-modal').classList.add('on');
   setTimeout(()=>document.getElementById('pin-input').focus(),100);
 }
+window.showPinModal = showPinModal;
+
 function hidePinModal() { document.getElementById('pin-modal').classList.remove('on'); }
+window.hidePinModal = hidePinModal;
 
 document.getElementById('pin-input').addEventListener('keydown', e=>{if(e.key==='Enter')checkPin();});
 
@@ -419,6 +452,7 @@ function checkPin() {
     document.getElementById('pin-input').focus();
   }
 }
+window.checkPin = checkPin;
 
 function applyAdminUI() {
   document.getElementById('admin-badge').style.display='flex';
@@ -433,6 +467,7 @@ function lockAdmin() {
   requestAnimationFrame(adjustHeaderOffset);
   showTab('list');
 }
+window.lockAdmin = lockAdmin;
 
 async function changePin() {
   if (!isAdmin||!db) return;
@@ -447,13 +482,17 @@ async function changePin() {
     setTimeout(()=>{errEl.textContent='';errEl.style.color='';},3000);
   } catch(e) { errEl.textContent='Error al guardar: '+e.message; }
 }
+window.changePin = changePin;
 
 // ── Foto modal ───────────────────────────────────────────────
 function openPhotoModal(src) {
   document.getElementById('modal-img').src=src;
   document.getElementById('photo-modal').classList.add('on');
 }
+window.openPhotoModal = openPhotoModal;
+
 function closePhotoModal() { document.getElementById('photo-modal').classList.remove('on'); }
+window.closePhotoModal = closePhotoModal;
 
 function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -511,3 +550,4 @@ function printReports(modo) {
 
   window.print();
 }
+window.printReports = printReports;
