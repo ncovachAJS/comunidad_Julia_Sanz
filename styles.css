@@ -143,6 +143,10 @@ input[type=date]{color-scheme:light}
 .updates li{font-size:13px;color:var(--muted);margin-bottom:8px;position:relative}
 .updates li::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--border);position:absolute;left:-18px;top:5px}
 .upd-date{font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums;margin-bottom:1px}
+.upd-status-entry{display:flex;flex-direction:column;gap:3px}
+.upd-status-entry::before{background:var(--primary)!important}
+.btn-reopen{padding:4px 10px;background:var(--surface);color:var(--primary);border:1.5px solid var(--primary);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s}
+.btn-reopen:hover{background:var(--primary-l)}
 .upd-form{margin-top:10px;display:flex;gap:7px}
 .upd-form input{flex:1;font-size:13px;padding:7px 10px}
 .upd-form button{padding:7px 13px;font-size:13px}

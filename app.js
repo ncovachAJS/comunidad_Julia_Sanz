@@ -317,12 +317,17 @@ function cardHTML(r, admin) {
     r.photos&&r.photos.length ? `<span class="tag t-photo">📷 ${r.photos.length}</span>` : ''
   ].filter(Boolean).join('');
   const updList = r.updates&&r.updates.length
-    ? `<ul class="updates">${r.updates.map(u=>`<li><div class="upd-date">${fmtDate(u.date)}</div>${escHtml(u.text)}</li>`).join('')}</ul>`
-    : '<p style="font-size:13px;color:var(--faint)">Sin actualizaciones.</p>';
+    ? `<ul class="updates">${r.updates.map(u => u.type === 'status'
+        ? `<li class="upd-status-entry"><div class="upd-date">${fmtDate(u.date)}</div><span class="spill s-${u.status}">${STATUS_LABELS[u.status]||u.status}</span></li>`
+        : `<li><div class="upd-date">${fmtDate(u.date)}</div>${escHtml(u.text)}</li>`
+      ).join('')}</ul>`
+    : '<p style="font-size:13px;color:var(--faint)">Sin historial de seguimiento.</p>';
   const gestInfo = r.reportedToGestora
     ? `<div class="gest-info">${r.reportedDate?`<strong>Reportado el</strong> ${new Date(r.reportedDate).toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'})}<br>`:''}${r.gestoraResponse?`<strong>Respuesta:</strong> ${escHtml(r.gestoraResponse)}`:'<em>Sin respuesta registrada</em>'}${r.gestoraPhoto?`<br><a href="${r.gestoraPhoto}" target="_blank"><img src="${r.gestoraPhoto}" style="margin-top:8px;max-width:100%;max-height:160px;object-fit:contain;border-radius:6px;border:1.5px solid var(--border-l);display:block"></a>`:''}}</div>`
     : '<p style="font-size:13px;color:var(--faint)">No comunicado a la gestora.</p>';
   const delBtn = admin ? `<button class="btn-danger" onclick="deleteReport('${r.id}')" style="padding:4px 10px;font-size:12px">🗑️ Eliminar</button>` : '';
+  const isClosed = r.status === 'resuelto' || r.status === 'sin_resolver';
+  const reopenBtn = isClosed ? `<button class="btn-reopen" onclick="reopenReport('${r.id}')">🔄 Reabrir</button>` : '';
   return `<div class="rcard">
   <div class="ubar ${r.urgency}"></div>
   <div class="rbody">
@@ -336,7 +341,7 @@ function cardHTML(r, admin) {
     <div class="rfoot"><span class="rdate">🕐 ${fmtDate(r.createdAt)}</span><div class="rtags">${tags}</div></div>
     <div class="card-actions">
       <button class="exp-btn" onclick="toggleDetail('${r.id}')">Ver detalles ▾</button>
-      ${delBtn}
+      <div style="display:flex;gap:6px;align-items:center">${reopenBtn}${delBtn}</div>
     </div>
   </div>
   <div class="rdetail" id="det-${r.id}">
@@ -378,8 +383,21 @@ async function addUpdate(id) {
 
 async function changeStatus(id, status) {
   if (!db) return;
-  await db.collection('reports').doc(id).update({status}).catch(console.error);
+  const r = allReports.find(r => r.id === id);
+  if (!r) return;
+  const logEntry = {
+    date: new Date().toISOString(),
+    type: 'status',
+    status,
+    text: `Estado → ${STATUS_LABELS[status] || status}`
+  };
+  await db.collection('reports').doc(id).update({
+    status,
+    updates: [...(r.updates || []), logEntry]
+  }).catch(console.error);
 }
+
+function reopenReport(id) { changeStatus(id, 'nuevo'); }
 
 async function deleteReport(id) {
   if (!isAdmin||!db) return;
