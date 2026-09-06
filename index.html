@@ -816,7 +816,7 @@
       ? `<div class="prow">${r.photos.map(p=>`<img class="pthumb" src="${p}" onclick="openPhotoModal('${p}')" alt="foto">`).join('')}</div>` : '';
     const tags = [
       r.reportedToGestora ? `<span class="tag t-rep">📞 Reportado</span>` : '',
-      r.isRecurring ? `<span class="tag t-rec">🔁 Reincidente</span>` : '',
+      r.isRecurring ? `<span class="tag t-rec">🔁 Recurrente</span>` : '',
       r.photos&&r.photos.length ? `<span class="tag t-photo">📷 ${r.photos.length}</span>` : ''
     ].filter(Boolean).join('');
     const updList = r.updates&&r.updates.length
@@ -999,7 +999,7 @@
           <span class="pv-status s-${r.status}">${STATUS_LABELS[r.status]||r.status}</span>
         </div>
         <div class="pv-title">${escHtml(r.title)}</div>
-        <div class="pv-meta">📅 ${fecha} · ${hora}${r.zone ? ` · 📍 ${escHtml(r.zone)}` : ''}${r.isRecurring ? ' · 🔁 Reincidente' : ''}</div>
+        <div class="pv-meta">📅 ${fecha} · ${hora}${r.zone ? ` · 📍 ${escHtml(r.zone)}` : ''}${r.isRecurring ? ' · 🔁 Recurrente' : ''}</div>
         ${r.description ? `<div class="pv-desc">${escHtml(r.description)}</div>` : ''}
         ${fotos}
         ${gestoraHtml}
