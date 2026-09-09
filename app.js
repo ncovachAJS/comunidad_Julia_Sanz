@@ -10,7 +10,7 @@ let cloudinaryReady = false;
 let gestoraPhotoUrl = null;
 
 const CAT_LABELS = { jardineria:'🌿 Jardinería',limpieza:'🧹 Limpieza',piscina:'🏊 Piscina',mantenimiento:'🔧 Mantenimiento',iluminacion:'💡 Iluminación',zonas_comunes:'🏛️ Zonas comunes',conserjeria:'🚪 Conserjería',bloque:'🏢 Bloque',otros:'⚙️ Otros' };
-const STATUS_LABELS = { nuevo:'Nuevo',reportado:'Reportado a gestora',en_proceso:'En proceso',resuelto:'Resuelto',sin_resolver:'Sin resolver' };
+const STATUS_LABELS = { nuevo:'Nuevo',reportado:'Reportado a Avalon',en_proceso:'En proceso',resuelto:'Resuelto',sin_resolver:'Sin resolver' };
 
 // ── Inicialización ───────────────────────────────────────────
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
@@ -324,7 +324,7 @@ function cardHTML(r, admin) {
     : '<p style="font-size:13px;color:var(--faint)">Sin historial de seguimiento.</p>';
   const gestInfo = r.reportedToGestora
     ? `<div class="gest-info">${r.reportedDate?`<strong>Reportado el</strong> ${new Date(r.reportedDate).toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'})}<br>`:''}${r.gestoraResponse?`<strong>Respuesta:</strong> ${escHtml(r.gestoraResponse)}`:'<em>Sin respuesta registrada</em>'}${r.gestoraPhoto?`<br><a href="${r.gestoraPhoto}" target="_blank"><img src="${r.gestoraPhoto}" style="margin-top:8px;max-width:100%;max-height:160px;object-fit:contain;border-radius:6px;border:1.5px solid var(--border-l);display:block"></a>`:''}}</div>`
-    : '<p style="font-size:13px;color:var(--faint)">No comunicado a la gestora.</p>';
+    : '<p style="font-size:13px;color:var(--faint)">No comunicado a Avalon.</p>';
   const delBtn = admin ? `<button class="btn-danger" onclick="deleteReport('${r.id}')" style="padding:4px 10px;font-size:12px">🗑️ Eliminar</button>` : '';
   const isClosed = r.status === 'resuelto' || r.status === 'sin_resolver';
   const reopenBtn = isClosed ? `<button class="btn-reopen" onclick="reopenReport('${r.id}')">🔄 Reabrir</button>` : '';
@@ -355,7 +355,7 @@ function cardHTML(r, admin) {
       <label>Estado:</label>
       <select class="ssel" onchange="changeStatus('${r.id}',this.value)">
         <option value="nuevo" ${r.status==='nuevo'?'selected':''}>Nuevo</option>
-        <option value="reportado" ${r.status==='reportado'?'selected':''}>Reportado a gestora</option>
+        <option value="reportado" ${r.status==='reportado'?'selected':''}>Reportado a Avalon</option>
         <option value="en_proceso" ${r.status==='en_proceso'?'selected':''}>En proceso</option>
         <option value="resuelto" ${r.status==='resuelto'?'selected':''}>Resuelto ✅</option>
         <option value="sin_resolver" ${r.status==='sin_resolver'?'selected':''}>Sin resolver ❌</option>
