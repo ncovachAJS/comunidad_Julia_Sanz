@@ -8,6 +8,7 @@ let isAdmin = false;
 let adminPin = 'vecinos2026'; // PIN por defecto — cámbialo desde el panel admin
 let cloudinaryReady = false;
 let gestoraPhotoUrl = null;
+const pendingUpdatePhotos = {}; // {reportId: photoUrl}
 
 const CAT_LABELS = { jardineria:'🌿 Jardinería',limpieza:'🧹 Limpieza',piscina:'🏊 Piscina',mantenimiento:'🔧 Mantenimiento',iluminacion:'💡 Iluminación',zonas_comunes:'🏛️ Zonas comunes',conserjeria:'🚪 Conserjería',bloque:'🏢 Bloque',otros:'⚙️ Otros' };
 const STATUS_LABELS = { nuevo:'Nuevo',reportado:'Reportado a Avalon',en_proceso:'En proceso',resuelto:'Resuelto',sin_resolver:'Sin resolver' };
@@ -319,7 +320,11 @@ function cardHTML(r, admin) {
   const updList = r.updates&&r.updates.length
     ? `<ul class="updates">${r.updates.map(u => u.type === 'status'
         ? `<li class="upd-status-entry"><div class="upd-date">${fmtDate(u.date)}</div><span class="spill s-${u.status}">${STATUS_LABELS[u.status]||u.status}</span></li>`
-        : `<li><div class="upd-date">${fmtDate(u.date)}</div>${escHtml(u.text)}</li>`
+        : `<li>
+            <div class="upd-date">${fmtDate(u.date)}</div>
+            ${u.text ? `<div>${escHtml(u.text)}</div>` : ''}
+            ${u.photoUrl ? `<img src="${u.photoUrl}" class="upd-photo-thumb" onclick="openPhotoModal('${u.photoUrl}')" alt="foto seguimiento">` : ''}
+           </li>`
       ).join('')}</ul>`
     : '<p style="font-size:13px;color:var(--faint)">Sin historial de seguimiento.</p>';
   const gestInfo = r.reportedToGestora
@@ -348,8 +353,14 @@ function cardHTML(r, admin) {
     <div class="dlbl" style="margin-top:14px">Gestora</div>${gestInfo}
     <div class="dlbl">Actualizaciones</div>${updList}
     <div class="upd-form">
-      <input type="text" id="upd-inp-${r.id}" placeholder="Añadir seguimiento..." maxlength="300">
+      <input type="text" id="upd-inp-${r.id}" placeholder="Añadir nota de seguimiento..." maxlength="300">
+      <button id="upd-photo-btn-${r.id}" class="btn-s upd-photo-btn" type="button" title="Adjuntar foto" onclick="document.getElementById('upd-photo-inp-${r.id}').click()">📷</button>
       <button class="btn-s" onclick="addUpdate('${r.id}')">Añadir</button>
+    </div>
+    <input type="file" id="upd-photo-inp-${r.id}" accept="image/*" style="display:none" onchange="uploadUpdatePhoto('${r.id}', this)">
+    <div id="upd-photo-prev-${r.id}" class="upd-photo-preview" style="display:none">
+      <img id="upd-photo-img-${r.id}" src="" class="upd-photo-preview-img" alt="foto adjunta">
+      <button type="button" class="upd-photo-del" onclick="removeUpdatePhoto('${r.id}')">✕</button>
     </div>
     <div class="status-row">
       <label>Estado:</label>
@@ -375,11 +386,46 @@ function toggleDetail(id) {
 async function addUpdate(id) {
   const inp = document.getElementById('upd-inp-'+id);
   const txt = inp.value.trim();
-  if (!txt||!db) return;
+  const photoUrl = pendingUpdatePhotos[id] || null;
+  if (!txt && !photoUrl) return;
+  if (!db) return;
   const r = allReports.find(r=>r.id===id); if (!r) return;
   inp.value = '';
-  await db.collection('reports').doc(id).update({ updates: [...(r.updates||[]),{date:new Date().toISOString(),text:txt}] }).catch(console.error);
+  const entry = { date: new Date().toISOString(), text: txt };
+  if (photoUrl) entry.photoUrl = photoUrl;
+  delete pendingUpdatePhotos[id];
+  const prev = document.getElementById('upd-photo-prev-'+id);
+  if (prev) prev.style.display = 'none';
+  await db.collection('reports').doc(id).update({ updates: [...(r.updates||[]), entry] }).catch(console.error);
 }
+
+async function uploadUpdatePhoto(id, input) {
+  const file = input.files[0]; if (!file) return;
+  const btn = document.getElementById('upd-photo-btn-'+id);
+  if (btn) btn.textContent = '⏳';
+  try {
+    const url = await uploadToCloudinary(file);
+    pendingUpdatePhotos[id] = url;
+    const img = document.getElementById('upd-photo-img-'+id);
+    const prev = document.getElementById('upd-photo-prev-'+id);
+    if (img) img.src = url;
+    if (prev) prev.style.display = 'flex';
+  } catch(e) {
+    alert('No se pudo subir la foto.');
+  }
+  if (btn) btn.textContent = '📷';
+  input.value = '';
+}
+window.uploadUpdatePhoto = uploadUpdatePhoto;
+
+function removeUpdatePhoto(id) {
+  delete pendingUpdatePhotos[id];
+  const prev = document.getElementById('upd-photo-prev-'+id);
+  const img = document.getElementById('upd-photo-img-'+id);
+  if (prev) prev.style.display = 'none';
+  if (img) img.src = '';
+}
+window.removeUpdatePhoto = removeUpdatePhoto;
 
 async function changeStatus(id, status) {
   if (!db) return;
